@@ -68,7 +68,6 @@ const PROFILES = {
   ]
 };
 
-
 const WORKING_WITH_OTHERS = {
   "D": {
     "I": "เปิดพื้นที่ให้อินทรีเสนอไอเดียและใช้พลังการสื่อสาร",
