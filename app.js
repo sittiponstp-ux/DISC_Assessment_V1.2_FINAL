@@ -1,4 +1,3 @@
-```javascript
 const GOOGLE_APPS_SCRIPT_URL =
   'https://script.google.com/macros/s/AKfycbwUL6lg0nW8GEInAQaAK6yuc2J5IJlWFOSaRZS0X78bFYtjO2RzeGYkNS1_xOk-9qY/exec';
 
