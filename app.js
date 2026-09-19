@@ -7,46 +7,41 @@ let answers = Array(24).fill(null);
 let employee = {};
 
 function show(id) {
-  document
-    .querySelectorAll('.screen')
-    .forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(function (x) {
+    x.classList.remove('active');
+  });
 
-  document
-    .getElementById(id)
-    .classList.add('active');
+  document.getElementById(id).classList.add('active');
 
-  scrollTo(0, 0);
+  window.scrollTo(0, 0);
 }
 
 function start() {
-  const a = [
+  const fields = [
     'employeeId',
     'employeeName',
     'division',
     'department'
   ];
 
-  if (
-    a.some(
-      x =>
-        !document
-          .getElementById(x)
-          .value
-          .trim()
-    )
-  ) {
-    return alert('กรุณากรอกข้อมูลให้ครบทุกช่อง');
+  for (const id of fields) {
+    const element = document.getElementById(id);
+
+    if (!element || !element.value.trim()) {
+      alert('กรุณากรอกข้อมูลให้ครบทุกช่อง');
+      return;
+    }
   }
 
   employee = {
-    employeeId: employeeId.value.trim(),
-    name: employeeName.value.trim(),
-    division: division.value.trim(),
-    department: department.value.trim()
+    employeeId: document.getElementById('employeeId').value.trim(),
+    name: document.getElementById('employeeName').value.trim(),
+    division: document.getElementById('division').value.trim(),
+    department: document.getElementById('department').value.trim()
   };
 
   current = 0;
-  answers.fill(null);
+  answers = Array(24).fill(null);
 
   render();
   show('quiz');
@@ -55,52 +50,65 @@ function start() {
 function render() {
   const q = QUESTIONS[current];
 
-  progress.textContent =
-    `คำถาม ${String(current + 1).padStart(2, '0')} / 24`;
+  document.getElementById('progress').textContent =
+    'คำถาม ' +
+    String(current + 1).padStart(2, '0') +
+    ' / 24';
 
-  bar.style.width =
+  document.getElementById('bar').style.width =
     ((current + 1) / 24 * 100) + '%';
 
-  qText.textContent = q.question;
+  document.getElementById('qText').textContent =
+    q.question;
 
-  options.innerHTML = '';
+  const optionsElement =
+    document.getElementById('options');
 
-  q.options.forEach(o => {
-    const d = document.createElement('label');
+  optionsElement.innerHTML = '';
 
-    d.className =
+  q.options.forEach(function (o) {
+    const label =
+      document.createElement('label');
+
+    label.className =
       'option' +
-      (answers[current] === o.style
-        ? ' selected'
-        : '');
+      (
+        answers[current] === o.style
+          ? ' selected'
+          : ''
+      );
 
-    d.innerHTML = `
-      <input
-        type="radio"
-        name="a"
-        ${answers[current] === o.style ? 'checked' : ''}
-      >
-      <span>${o.text}</span>
-    `;
+    label.innerHTML =
+      '<input type="radio" name="a" ' +
+      (
+        answers[current] === o.style
+          ? 'checked'
+          : ''
+      ) +
+      '>' +
+      '<span>' +
+      o.text +
+      '</span>';
 
-    d.onclick = () => {
+    label.onclick = function () {
       answers[current] = o.style;
       render();
     };
 
-    options.appendChild(d);
+    optionsElement.appendChild(label);
   });
 
-  back.disabled = current === 0;
+  document.getElementById('back').disabled =
+    current === 0;
 
-  next.textContent =
+  document.getElementById('next').textContent =
     current === 23
       ? 'ดูผลลัพธ์'
       : 'ถัดไป';
 }
 
 function prev() {
-  if (current) {
+  if (current > 0) {
     current--;
     render();
   }
@@ -108,9 +116,10 @@ function prev() {
 
 function next() {
   if (!answers[current]) {
-    return alert(
+    alert(
       'กรุณาเลือกคำตอบก่อนดำเนินการต่อ'
     );
+    return;
   }
 
   if (current < 23) {
@@ -124,345 +133,115 @@ function next() {
 function calculate() {
   show('processing');
 
-  setTimeout(() => {
-    const s = {
+  setTimeout(function () {
+    const scores = {
       D: 0,
       I: 0,
       S: 0,
       C: 0
     };
 
-    answers.forEach(x => {
-      s[x]++;
+    answers.forEach(function (style) {
+      if (scores.hasOwnProperty(style)) {
+        scores[style]++;
+      }
     });
 
     const order =
-      Object.entries(s)
-        .sort((a, b) => b[1] - a[1]);
+      Object.entries(scores).sort(
+        function (a, b) {
+          return b[1] - a[1];
+        }
+      );
 
-    const p = order[0][0];
-    const sec = order[1][0];
+    const primary = order[0][0];
+    const secondary = order[1][0];
 
-    renderResult(s, p, sec);
+    renderResult(
+      scores,
+      primary,
+      secondary
+    );
 
-    save(s, p, sec);
+    save(
+      scores,
+      primary,
+      secondary
+    );
 
     show('result');
   }, 500);
 }
 
-function renderResult(s, p, sec) {
-  const x = PROFILES[p];
+function renderResult(scores, primary, secondary) {
+  const profile =
+    PROFILES[primary];
 
   const others =
-    ['D', 'I', 'S', 'C']
-      .filter(k => k !== p);
-
-  resultCard.innerHTML = `
-
-    <div class="animal">
-      ${x[0]}
-    </div>
-
-    <div class="title">
-
-      <h1>
-        Personal DISC Card
-      </h1>
-
-      <h2>
-        ${x[1]} — ${x[2]}
-      </h2>
-
-      <p>
-        ${employee.name} |
-        ${employee.employeeId}
-      </p>
-
-      <p>
-        ${employee.division} •
-        ${employee.department}
-      </p>
-
-    </div>
-
-    <div class="scores">
-
-      ${['D', 'I', 'S', 'C']
-        .map(k => `
-          <div class="score">
-            <b>${k}</b>
-            <br>
-            ${s[k]} คะแนน
-          </div>
-        `)
-        .join('')}
-
-    </div>
-
-    <div class="section">
-
-      <h3>
-        ผลลัพธ์
-      </h3>
-
-      <p>
-        <b>บุคลิกหลัก:</b>
-        ${PROFILES[p][1]} (${p})
-      </p>
-
-      <p>
-        <b>บุคลิกรอง:</b>
-        ${PROFILES[sec][1]} (${sec})
-      </p>
-
-    </div>
-
-    <div class="section">
-
-      <h3>
-        บุคลิกโดยรวม
-      </h3>
-
-      <p>
-        ${x[3]}
-      </p>
-
-    </div>
-
-    <div class="section">
-
-      <h3>
-        จุดแข็ง
-      </h3>
-
-      <ul>
-        ${x[4]
-          .map(v => `<li>${v}</li>`)
-          .join('')}
-      </ul>
-
-    </div>
-
-    <div class="section">
-
-      <h3>
-        สิ่งที่ควรระวัง
-      </h3>
-
-      <p>
-        ${x[5]}
-      </p>
-
-    </div>
-
-    <div class="section">
-
-      <h3>
-        สไตล์การสื่อสาร
-      </h3>
-
-      <p>
-        ${x[6]}
-      </p>
-
-    </div>
-
-    <div class="section">
-
-      <h3>
-        สไตล์การทำงาน
-      </h3>
-
-      <p>
-        ${x[7]}
-      </p>
-
-    </div>
-
-    <div class="section">
-
-      <h3>
-        เมื่ออยู่ภายใต้แรงกดดัน
-      </h3>
-
-      <p>
-        ${x[8]}
-      </p>
-
-    </div>
-
-    <div class="section">
-
-      <h3>
-        ทำงานร่วมกับสัตว์ 4 ทิศ
-      </h3>
-
-      ${others
-        .map(k => `
-          <p>
-            <b>
-              ${PROFILES[k][0]}
-              ${PROFILES[k][1]}:
-            </b>
-
-            ${WORKING_WITH_OTHERS[p][k]}
-          </p>
-        `)
-        .join('')}
-
-    </div>
-
-    <div class="section">
-
-      <p>
-        <b>หมายเหตุ:</b>
-        DISC ไม่มีประเภทใดดีกว่าหรือแย่กว่า
-        ประเภทอื่น แบบประเมินนี้ใช้เพื่อการเรียนรู้
-        ตนเองและการทำงานร่วมกัน
-      </p>
-
-      <p>
-        <b>
-          Know Yourself /
-          Understand Others /
-          Work Better Together
-        </b>
-      </p>
-
-    </div>
-  `;
-}
-
-function save(s, p, sec) {
-
-  if (!GOOGLE_APPS_SCRIPT_URL) {
-    console.warn(
-      'Google Apps Script URL is not configured.'
-    );
-    return;
-  }
-
-  const payload = {
-    assessmentId:
-      'DISC-' + Date.now(),
-
-    employeeId:
-      employee.employeeId || '',
-
-    name:
-      employee.name || '',
-
-    division:
-      employee.division || '',
-
-    department:
-      employee.department || '',
-
-    timestamp:
-      new Date().toISOString(),
-
-    answers:
-      answers.map((v, i) => ({
-        question:
-          'Q' +
-          String(i + 1).padStart(2, '0'),
-
-        style:
-          v
-      })),
-
-    D: s.D,
-    I: s.I,
-    S: s.S,
-    C: s.C,
-
-    primaryAnimal:
-      PROFILES[p][1],
-
-    primary:
-      p,
-
-    secondaryAnimal:
-      PROFILES[sec][1],
-
-    secondary:
-      sec,
-
-    personalityType:
-      p + sec,
-
-    assessmentVersion:
-      'V1.2.1'
-  };
-
-  console.log(
-    'DISC payload:',
-    payload
-  );
-
-  fetch(
-    GOOGLE_APPS_SCRIPT_URL,
-    {
-      method: 'POST',
-
-      headers: {
-        'Content-Type':
-          'text/plain;charset=utf-8'
-      },
-
-      body:
-        JSON.stringify(payload)
-    }
-  )
-    .then(response => {
-
-      console.log(
-        'DISC HTTP status:',
-        response.status
-      );
-
-      return response.text();
-    })
-
-    .then(result => {
-
-      console.log(
-        'DISC submission response:',
-        result
-      );
-
-      try {
-        const data = JSON.parse(result);
-
-        if (data.success) {
-          console.log(
-            '✅ DISC submission saved successfully.'
-          );
-        } else {
-          console.error(
-            '❌ DISC submission rejected:',
-            data
-          );
-        }
-
-      } catch (error) {
-
-        console.warn(
-          '⚠️ Response is not JSON:',
-          result
-        );
+    ['D', 'I', 'S', 'C'].filter(
+      function (key) {
+        return key !== primary;
       }
+    );
 
-    })
+  const resultCardElement =
+    document.getElementById('resultCard');
 
-    .catch(error => {
+  resultCardElement.innerHTML =
 
-      console.error(
-        '❌ DISC submission failed:',
-        error
-      );
+    '<div class="animal">' +
+      profile[0] +
+    '</div>' +
 
-    });
-}
+    '<div class="title">' +
+
+      '<h1>' +
+        'Personal DISC Card' +
+      '</h1>' +
+
+      '<h2>' +
+        profile[1] +
+        ' — ' +
+        profile[2] +
+      '</h2>' +
+
+      '<p>' +
+        employee.name +
+        ' | ' +
+        employee.employeeId +
+      '</p>' +
+
+      '<p>' +
+        employee.division +
+        ' • ' +
+        employee.department +
+      '</p>' +
+
+    '</div>' +
+
+    '<div class="scores">' +
+
+      ['D', 'I', 'S', 'C']
+        .map(function (key) {
+          return (
+            '<div class="score">' +
+              '<b>' +
+                key +
+              '</b>' +
+              '<br>' +
+              scores[key] +
+              ' คะแนน' +
+            '</div>'
+          );
+        })
+        .join('') +
+
+    '</div>' +
+
+    '<div class="section">' +
+
+      '<h3>ผลลัพธ์</h3>' +
+
+      '<p>' +
+        '<b>บุ
 ```
