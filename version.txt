@@ -1,2 +1,1 @@
-DISC Assessment V1.2 FINAL
-Employee-facing language: Thai 100%
+V1.2.1
