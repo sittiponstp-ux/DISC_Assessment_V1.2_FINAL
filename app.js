@@ -1,3 +1,4 @@
+```javascript
 const GOOGLE_APPS_SCRIPT_URL =
   'https://script.google.com/macros/s/AKfycbwUL6lg0nW8GEInAQaAK6yuc2J5IJlWFOSaRZS0X78bFYtjO2RzeGYkNS1_xOk-9qY/exec';
 
@@ -52,7 +53,7 @@ function start() {
 }
 
 function render() {
-  let q = QUESTIONS[current];
+  const q = QUESTIONS[current];
 
   progress.textContent =
     `คำถาม ${String(current + 1).padStart(2, '0')} / 24`;
@@ -65,8 +66,7 @@ function render() {
   options.innerHTML = '';
 
   q.options.forEach(o => {
-
-    let d = document.createElement('label');
+    const d = document.createElement('label');
 
     d.className =
       'option' +
@@ -107,7 +107,6 @@ function prev() {
 }
 
 function next() {
-
   if (!answers[current]) {
     return alert(
       'กรุณาเลือกคำตอบก่อนดำเนินการต่อ'
@@ -123,12 +122,10 @@ function next() {
 }
 
 function calculate() {
-
   show('processing');
 
   setTimeout(() => {
-
-    let s = {
+    const s = {
       D: 0,
       I: 0,
       S: 0,
@@ -139,31 +136,25 @@ function calculate() {
       s[x]++;
     });
 
-    let order =
+    const order =
       Object.entries(s)
         .sort((a, b) => b[1] - a[1]);
 
-    let p = order[0][0];
-    let sec = order[1][0];
+    const p = order[0][0];
+    const sec = order[1][0];
 
     renderResult(s, p, sec);
 
-    /*
-     * ส่งข้อมูลไป Google Apps Script
-     * ไม่บล็อกการแสดงผล Personality Card
-     */
     save(s, p, sec);
 
     show('result');
-
   }, 500);
 }
 
 function renderResult(s, p, sec) {
+  const x = PROFILES[p];
 
-  let x = PROFILES[p];
-
-  let others =
+  const others =
     ['D', 'I', 'S', 'C']
       .filter(k => k !== p);
 
@@ -353,7 +344,6 @@ function save(s, p, sec) {
   }
 
   const payload = {
-
     assessmentId:
       'DISC-' + Date.now(),
 
@@ -406,6 +396,11 @@ function save(s, p, sec) {
       'V1.2.1'
   };
 
+  console.log(
+    'DISC payload:',
+    payload
+  );
+
   fetch(
     GOOGLE_APPS_SCRIPT_URL,
     {
@@ -422,11 +417,10 @@ function save(s, p, sec) {
   )
     .then(response => {
 
-      if (!response.ok) {
-        throw new Error(
-          `HTTP ${response.status}`
-        );
-      }
+      console.log(
+        'DISC HTTP status:',
+        response.status
+      );
 
       return response.text();
     })
@@ -434,18 +428,41 @@ function save(s, p, sec) {
     .then(result => {
 
       console.log(
-        'DISC submission sent:',
+        'DISC submission response:',
         result
       );
+
+      try {
+        const data = JSON.parse(result);
+
+        if (data.success) {
+          console.log(
+            '✅ DISC submission saved successfully.'
+          );
+        } else {
+          console.error(
+            '❌ DISC submission rejected:',
+            data
+          );
+        }
+
+      } catch (error) {
+
+        console.warn(
+          '⚠️ Response is not JSON:',
+          result
+        );
+      }
 
     })
 
     .catch(error => {
 
       console.error(
-        'DISC submission failed:',
+        '❌ DISC submission failed:',
         error
       );
 
     });
 }
+```
