@@ -10,21 +10,25 @@ function show(id) {
     x.classList.remove('active');
   });
 
-  document.getElementById(id).classList.add('active');
+  var target = document.getElementById(id);
+
+  if (target) {
+    target.classList.add('active');
+  }
 
   window.scrollTo(0, 0);
 }
 
 function start() {
-  const fields = [
+  var fields = [
     'employeeId',
     'employeeName',
     'division',
     'department'
   ];
 
-  for (const id of fields) {
-    const element = document.getElementById(id);
+  for (var i = 0; i < fields.length; i++) {
+    var element = document.getElementById(fields[i]);
 
     if (!element || !element.value.trim()) {
       alert('กรุณากรอกข้อมูลให้ครบทุกช่อง');
@@ -47,7 +51,7 @@ function start() {
 }
 
 function render() {
-  const q = QUESTIONS[current];
+  var q = QUESTIONS[current];
 
   document.getElementById('progress').textContent =
     'คำถาม ' +
@@ -60,13 +64,13 @@ function render() {
   document.getElementById('qText').textContent =
     q.question;
 
-  const optionsElement =
+  var optionsElement =
     document.getElementById('options');
 
   optionsElement.innerHTML = '';
 
   q.options.forEach(function (o) {
-    const label =
+    var label =
       document.createElement('label');
 
     label.className =
@@ -77,17 +81,21 @@ function render() {
           : ''
       );
 
-    label.innerHTML =
-      '<input type="radio" name="a" ' +
-      (
-        answers[current] === o.style
-          ? 'checked'
-          : ''
-      ) +
-      '>' +
-      '<span>' +
-      o.text +
-      '</span>';
+    var input =
+      document.createElement('input');
+
+    input.type = 'radio';
+    input.name = 'a';
+    input.checked =
+      answers[current] === o.style;
+
+    var span =
+      document.createElement('span');
+
+    span.textContent = o.text;
+
+    label.appendChild(input);
+    label.appendChild(span);
 
     label.onclick = function () {
       answers[current] = o.style;
@@ -133,7 +141,7 @@ function calculate() {
   show('processing');
 
   setTimeout(function () {
-    const scores = {
+    var scores = {
       D: 0,
       I: 0,
       S: 0,
@@ -141,20 +149,25 @@ function calculate() {
     };
 
     answers.forEach(function (style) {
-      if (scores.hasOwnProperty(style)) {
+      if (
+        style === 'D' ||
+        style === 'I' ||
+        style === 'S' ||
+        style === 'C'
+      ) {
         scores[style]++;
       }
     });
 
-    const order =
+    var order =
       Object.entries(scores).sort(
         function (a, b) {
           return b[1] - a[1];
         }
       );
 
-    const primary = order[0][0];
-    const secondary = order[1][0];
+    var primary = order[0][0];
+    var secondary = order[1][0];
 
     renderResult(
       scores,
@@ -172,75 +185,366 @@ function calculate() {
   }, 500);
 }
 
-function renderResult(scores, primary, secondary) {
-  const profile =
+function renderResult(
+  scores,
+  primary,
+  secondary
+) {
+  var profile =
     PROFILES[primary];
 
-  const others =
+  var others =
     ['D', 'I', 'S', 'C'].filter(
       function (key) {
         return key !== primary;
       }
     );
 
-  const resultCardElement =
-    document.getElementById('resultCard');
+  var html = '';
 
-  resultCardElement.innerHTML =
+  html += '<div class="animal">';
+  html += profile[0];
+  html += '</div>';
 
-    '<div class="animal">' +
-      profile[0] +
-    '</div>' +
+  html += '<div class="title">';
 
-    '<div class="title">' +
+  html += '<h1>';
+  html += 'Personal DISC Card';
+  html += '</h1>';
 
-      '<h1>' +
-        'Personal DISC Card' +
-      '</h1>' +
+  html += '<h2>';
+  html += profile[1];
+  html += ' — ';
+  html += profile[2];
+  html += '</h2>';
 
-      '<h2>' +
-        profile[1] +
-        ' — ' +
-        profile[2] +
-      '</h2>' +
+  html += '<p>';
+  html += employee.name;
+  html += ' | ';
+  html += employee.employeeId;
+  html += '</p>';
 
-      '<p>' +
-        employee.name +
-        ' | ' +
-        employee.employeeId +
-      '</p>' +
+  html += '<p>';
+  html += employee.division;
+  html += ' • ';
+  html += employee.department;
+  html += '</p>';
 
-      '<p>' +
-        employee.division +
-        ' • ' +
-        employee.department +
-      '</p>' +
+  html += '</div>';
 
-    '</div>' +
+  html += '<div class="scores">';
 
-    '<div class="scores">' +
+  ['D', 'I', 'S', 'C'].forEach(
+    function (key) {
+      html += '<div class="score">';
+      html += '<b>';
+      html += key;
+      html += '</b>';
+      html += '<br>';
+      html += scores[key];
+      html += ' คะแนน';
+      html += '</div>';
+    }
+  );
 
-      ['D', 'I', 'S', 'C']
-        .map(function (key) {
-          return (
-            '<div class="score">' +
-              '<b>' +
-                key +
-              '</b>' +
-              '<br>' +
-              scores[key] +
-              ' คะแนน' +
-            '</div>'
+  html += '</div>';
+
+  html += '<div class="section">';
+
+  html += '<h3>';
+  html += 'ผลลัพธ์';
+  html += '</h3>';
+
+  html += '<p>';
+  html += '<b>บุคลิกหลัก:</b> ';
+  html += PROFILES[primary][1];
+  html += ' (';
+  html += primary;
+  html += ')';
+  html += '</p>';
+
+  html += '<p>';
+  html += '<b>บุคลิกรอง:</b> ';
+  html += PROFILES[secondary][1];
+  html += ' (';
+  html += secondary;
+  html += ')';
+  html += '</p>';
+
+  html += '</div>';
+
+  html += '<div class="section">';
+
+  html += '<h3>';
+  html += 'บุคลิกโดยรวม';
+  html += '</h3>';
+
+  html += '<p>';
+  html += profile[3];
+  html += '</p>';
+
+  html += '</div>';
+
+  html += '<div class="section">';
+
+  html += '<h3>';
+  html += 'จุดแข็ง';
+  html += '</h3>';
+
+  html += '<ul>';
+
+  profile[4].forEach(
+    function (item) {
+      html += '<li>';
+      html += item;
+      html += '</li>';
+    }
+  );
+
+  html += '</ul>';
+  html += '</div>';
+
+  html += '<div class="section">';
+
+  html += '<h3>';
+  html += 'สิ่งที่ควรระวัง';
+  html += '</h3>';
+
+  html += '<p>';
+  html += profile[5];
+  html += '</p>';
+
+  html += '</div>';
+
+  html += '<div class="section">';
+
+  html += '<h3>';
+  html += 'สไตล์การสื่อสาร';
+  html += '</h3>';
+
+  html += '<p>';
+  html += profile[6];
+  html += '</p>';
+
+  html += '</div>';
+
+  html += '<div class="section">';
+
+  html += '<h3>';
+  html += 'สไตล์การทำงาน';
+  html += '</h3>';
+
+  html += '<p>';
+  html += profile[7];
+  html += '</p>';
+
+  html += '</div>';
+
+  html += '<div class="section">';
+
+  html += '<h3>';
+  html += 'เมื่ออยู่ภายใต้แรงกดดัน';
+  html += '</h3>';
+
+  html += '<p>';
+  html += profile[8];
+  html += '</p>';
+
+  html += '</div>';
+
+  html += '<div class="section">';
+
+  html += '<h3>';
+  html += 'ทำงานร่วมกับสัตว์ 4 ทิศ';
+  html += '</h3>';
+
+  others.forEach(
+    function (key) {
+      html += '<p>';
+
+      html += '<b>';
+      html += PROFILES[key][0];
+      html += ' ';
+      html += PROFILES[key][1];
+      html += ':</b> ';
+
+      html +=
+        WORKING_WITH_OTHERS[primary][key];
+
+      html += '</p>';
+    }
+  );
+
+  html += '</div>';
+
+  html += '<div class="section">';
+
+  html += '<p>';
+
+  html += '<b>หมายเหตุ:</b> ';
+  html +=
+    'DISC ไม่มีประเภทใดดีกว่าหรือแย่กว่า' +
+    'ประเภทอื่น แบบประเมินนี้ใช้เพื่อการเรียนรู้' +
+    'ตนเองและการทำงานร่วมกัน';
+
+  html += '</p>';
+
+  html += '<p>';
+
+  html += '<b>';
+  html +=
+    'Know Yourself / ' +
+    'Understand Others / ' +
+    'Work Better Together';
+  html += '</b>';
+
+  html += '</p>';
+
+  html += '</div>';
+
+  document.getElementById(
+    'resultCard'
+  ).innerHTML = html;
+}
+
+function save(
+  scores,
+  primary,
+  secondary
+) {
+  if (!GOOGLE_APPS_SCRIPT_URL) {
+    console.warn(
+      'Google Apps Script URL is not configured.'
+    );
+    return;
+  }
+
+  var payload = {
+    assessmentId:
+      'DISC-' + Date.now(),
+
+    employeeId:
+      employee.employeeId || '',
+
+    name:
+      employee.name || '',
+
+    division:
+      employee.division || '',
+
+    department:
+      employee.department || '',
+
+    timestamp:
+      new Date().toISOString(),
+
+    answers:
+      answers.map(function (style, index) {
+        return {
+          question:
+            'Q' +
+            String(index + 1).padStart(2, '0'),
+
+          style:
+            style
+        };
+      }),
+
+    D: scores.D,
+    I: scores.I,
+    S: scores.S,
+    C: scores.C,
+
+    primaryAnimal:
+      PROFILES[primary][1],
+
+    primary:
+      primary,
+
+    secondaryAnimal:
+      PROFILES[secondary][1],
+
+    secondary:
+      secondary,
+
+    personalityType:
+      primary + secondary,
+
+    assessmentVersion:
+      'V1.2.1'
+  };
+
+  console.log(
+    'DISC payload:',
+    payload
+  );
+
+  fetch(
+    GOOGLE_APPS_SCRIPT_URL,
+    {
+      method: 'POST',
+
+      headers: {
+        'Content-Type':
+          'text/plain;charset=utf-8'
+      },
+
+      body:
+        JSON.stringify(payload)
+    }
+  )
+    .then(function (response) {
+
+      console.log(
+        'DISC HTTP status:',
+        response.status
+      );
+
+      return response.text();
+    })
+
+    .then(function (result) {
+
+      console.log(
+        'DISC submission response:',
+        result
+      );
+
+      try {
+        var data =
+          JSON.parse(result);
+
+        if (data.success) {
+
+          console.log(
+            'DISC submission saved successfully.'
           );
-        })
-        .join('') +
 
-    '</div>' +
+        } else {
 
-    '<div class="section">' +
+          console.error(
+            'DISC submission rejected:',
+            data
+          );
 
-      '<h3>ผลลัพธ์</h3>' +
+        }
 
-      '<p>' +
-        '<b>บุ
-```
+      } catch (error) {
+
+        console.warn(
+          'Response is not JSON:',
+          result
+        );
+      }
+
+    })
+
+    .catch(function (error) {
+
+      console.error(
+        'DISC submission failed:',
+        error
+      );
+
+    });
+}
