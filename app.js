@@ -403,7 +403,7 @@ function save(s, p, sec) {
       p + sec,
 
     assessmentVersion:
-      'V1.2'
+      'V1.2.1'
   };
 
   fetch(
